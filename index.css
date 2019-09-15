@@ -81,20 +81,13 @@
     background-color: var(--background);
     overflow: hidden;
   }
-  html:after{
-    content: '';
-    display: none;
-    background: linear-gradient(to right, var(--background), 50%, white);
-    widht: 200vw;
-    height: 100vh;
-    
-  }
+  
   #fish-canvas{
     opacity: .4;
     position: absolute;
     top: calc(100vh - 400px);
     left: 10px;
-    z-index: 2;
+    z-index: 1;
   }
   
   .star{
@@ -151,32 +144,32 @@
   }
   
   .wave-wrapper{
-    width: 100vw;
-    height: 300px; 
+    left: -50px;
+    top: 50px;
+    //width: calc(100vw + 50px);
+    //height: calc(300px + 30px); 
     display: flex;
     position: absolute;
     //animation: drift 3000ms infinite linear;
   }
   
   .wave {
-    width: 100%;
-    height: 100%;
+    //width: 100%;
+    //height: 100%;
     transform-origin: 50% 48%;
     border-top-left-radius: 43%;
     border-top-right-radius: 43%;
   }
-  .wave-wrapper{
-    left: -50px;
-  }
+  
   .wave-wrapper.layer1 {
-    top: calc(100vh - 500px); 
+    //top: calc(100vh - 500px); 
     animation: drift 5000ms infinite linear;
   }
   .layer1 .wave{
     background-color: #195d7d;
   }
   .wave-wrapper.layer2 {
-    top: calc(100vh - 400px); 
+    //top: calc(100vh - 400px); 
     z-index: 1;
     animation: drift 4000ms infinite linear;
   }
@@ -184,13 +177,14 @@
     background-color: #0f7cb1;
   }
   .wave-wrapper.layer3 {
-    top: calc(100vh - 300px); 
+    //top: calc(100vh - 300px); 
     z-index: 3;
     animation: drift 5000ms infinite linear;
   }
   .layer3 .wave{
     background-color: #098fd0;
   }
+  
   @keyframes drift {
     0% { 
       transform: translate(0,0); 
@@ -209,25 +203,23 @@
     }
   }
   
-  @keyframes sunrise{
-    0%{ background: linear-gradient(to right, var(--background), 100%, white); }
-  /*   10%{ background: linear-gradient(to right, var(--background), 90%, white); }
-    20%{ background: linear-gradient(to right, var(--background), 80%, white); }
-    30%{ background: linear-gradient(to right, var(--background), 70%, white); }
-    40%{ background: linear-gradient(to right, var(--background), 60%, white); } */
-    50%{ background: linear-gradient(to right, var(--background), 50%, white); }
-  /*   60%{ background: linear-gradient(to right, var(--background), 40%, white); }
-    70%{ background: linear-gradient(to right, var(--background), 30%, white); }
-    80%{ background: linear-gradient(to right, var(--background), 20%, white); }
-    90%{ background: linear-gradient(to right, var(--background), 10%, white); } */
-    100%{ background: linear-gradient(to right, var(--background), 0%, white); }
-  }
-  
   @keyframes falling{
     0%{
       transform: translate(0,0);
     }
     100%{
       transform: translate(-30vh, 60vh);
+    }
+  }
+  
+  @keyframes waveUp{
+    100%{
+      transform: scale(5);
+    }
+  }
+  
+  @keyframes waveDown{
+    100%{
+      transform: scale(0.2);
     }
   }
