@@ -235,17 +235,21 @@ function showCloud(){
 }
 
 function showBeach(){
-
+ 
 	// remain only one wave
 	const waves = document.getElementsByClassName("wave-wrapper");
   for(let i=0; i<6; i++){
     waves[2].children[i].style.animation = 'waveUp 2s forwards ease-in-out';
   }
-	
+	 let isFirst = true;
   waves[2].children[0].addEventListener("animationend", () => {
     // remove cloud
+    if(!isFirst) return;
+    isFirst = false;
 	  document.querySelector(".day").style.visibility = "hidden";
-	
+	  document.querySelector("#fish-canvas").style.display = "none";
+    document.querySelector(".star-wrapper").style.visibility = "hidden";
+    
 	  // hide another wave
 	  waves[0].style.visibility = 'hidden';
 	  waves[1].style.visibility = 'hidden';
@@ -255,18 +259,18 @@ function showBeach(){
     html.style.background = '';
 	  html.style.backgroundColor = '#f9eebd';
     
-    waves[2].style.transition = 'all 1.5s ease-out';
-    waves[2].style.transform = 'scale(0.2)';
-    waves[2].style.opacity = '.5';
-    
+    for(let i=0; i<6; i++){
+      waves[2].children[i].style.animation = 'waveDown 2s forwards ease-in-out';
+    }
+   
     drawBeach();
   });
 }
 
 function drawBeach(){
 	const ctx =         document.getElementById('beach-canvas').getContext('2d');
-	//ctx.canvas.width = baseSize + 50;
-	//ctx.canvas.height = baseSize + 50;
+	ctx.canvas.width = width;
+	ctx.canvas.height = height;
 	const baseColor = 'white';
 	ctx.fillStyle = baseColor;
 	ctx.beginPath();
@@ -277,10 +281,9 @@ function drawBeach(){
 		ctx.arc(coord.x, coord.y, 1, Math.PI*2, 0, true);
 	}
 	ctx.fill();
-  
-  document.getElementsByClassName("parasol")[0].style.visibility = '';
-	document.getElementsByClassName("center")[0].style.visibility = '';
-	moveStep();
+  document.getElementsByClassName("parasol")[0].style.visibility = 'visible';
+	document.getElementsByClassName("center")[0].style.visibility = 'visible';
+  moveStep();
 }
 function moveStep(){
 	const footNum = addStepEle();

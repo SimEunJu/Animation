@@ -214,12 +214,14 @@
   
   @keyframes waveUp{
     100%{
-      transform: scale(5);
+      transform: scale(2,5);
     }
   }
-  
   @keyframes waveDown{
+    0%{
+      transform: scale(2,5);
+    }
     100%{
-      transform: scale(0.2);
+      transform: scale(1,1);
     }
   }
