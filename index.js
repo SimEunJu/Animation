@@ -6,62 +6,50 @@ const height = window.innerHeight;
 addWave();
 drawBackgroundStar();
 drawMainStar();
-document.querySelector("#fish-canvas").addEventListener("animationstart", nightToDay, false);
+//document.querySelector("#fish-canvas").addEventListener("animationstart", nightToDay, false);
 
 function addWave(){
-  const waveWrappers = document.getElementsByClassName('wave-wrapper');
-  const len = waveWrappers.length;
-  const waveWidth = Math.round(width / 5);
-  const hierarchy = [{
-    type: "div",
-    child: []
-  }];
-  for(let i=0; i<len; i++){
-    waveWrappers[i].style.top = `calc(100vh - ${(len-i)*0.6*waveWidth}px)`;
-  }
-  const style = `width: ${waveWidth}px; height: ${waveWidth*1.2}px`;
-  for(let i=0; i<6; i++){
-    hierarchy[0].child.push({
-      type: "div",
-      attrs: {class: "wave", style: style},
-    });
-  }
-  getEle(hierarchy);
-  makeEleTree(hierarchy);
-  for(let i=0; i<len; i++){
-    waveWrappers[i].innerHTML = hierarchy[0].element.innerHTML;
-  }
-}
-
-function drawMainStar(){
 	
-	const starWrapper = document.getElementsByClassName('star-wrapper')[0];
-	const stars = starWrapper.children;
-	const starNum = stars.length;
+	const waveWrappers = document.getElementsByClassName('wave-wrapper');
+	const waveWrapperNum = waveWrappers.length;
 	
-	for(let i=0; i<starNum; i++){
-		
-		const coord = getRandomCoord(width, height - 3*0.6*Math.round(width / 5));
-		
-		stars[i].setAttribute("class", "star");
-		
-		const starStyle = stars[i].style;
-		starStyle.top = coord.y+"px";
-		starStyle.left = coord.x+"px";
-		
-		// *한 군데 모이도록 재설정
-		starStyle.animation = "falling 3s 2s forwards linear";
+	// *화면 크기에 따른 파도 크기 설정
+	const waveNum = 5;
+	const waveWidth = Math.round(width/waveNum);
+	
+	// wave의 수직 위치 정하기
+	for(let i=0; i<waveWrapperNum; i++){
+		waveWrappers[i].style.top = `calc(100vh - ${(len-i)*0.6*waveWidth}px)`;
 	}
-	// 별이 떨이지고 난 후 물고기가 움직인다
-	stars[0].addEventListener("animationend", drawFish, false);
+	
+	const hierarchy = [{
+		type: "div",
+		child: []
+	}];
+	const style = `width: ${waveWidth}px; height: ${waveWidth*1.2}px`;
+	for(let i=0; i<waveNum; i++){
+		hierarchy[0].child.push({
+			type: "div",
+			attrs: {class: "wave", style: style},
+		});
+	}
+	
+	// dom element를 만든 후
+	getEle(hierarchy);
+	// dom tree를 만든다
+	makeEleTree(hierarchy);
+	
+	for(let i=0; i<len; i++){
+		waveWrappers[i].innerHTML = hierarchy[0].element.innerHTML;
+	}
 }
 
-// *추후에 day function이랑 합쳐야 
 function drawBackgroundStar(){
 	
 	const ctx = document.getElementById('star-sky-canvas').getContext('2d');
 	ctx.canvas.width = width;
-	ctx.canvas.height = height - 3*0.6*Math.round(width / 5);
+	ctx.canvas.height = height;
+	// - 3*0.6*Math.round(width / 5);
 	
 	const baseColor = 'rgba(225, 215, 0, 0.7)';
 	ctx.fillStyle = baseColor;
@@ -76,6 +64,55 @@ function drawBackgroundStar(){
 	ctx.fill();
 } 
 
+function drawMainStar(){
+	
+	const starWrapper = document.getElementsByClassName('star-wrapper')[0];
+	const stars = starWrapper.children;
+	const starNum = stars.length;
+	
+	for(let i=0; i<starNum; i++){
+		
+		// *wave와 하늘 경계선 위치 공통
+		const coord = getRandomCoord(width, height - 3*0.6*Math.round(width / 5));
+		
+		stars[i].setAttribute("class", "star");
+		
+		const starStyle = stars[i].style;
+		starStyle.top = coord.y+"px";
+		starStyle.left = coord.x+"px";
+	}
+}
+
+function animateStarFalling(){
+	// *중복코드
+	const starWrapper = document.getElementsByClassName('star-wrapper')[0];
+	const stars = starWrapper.children;
+	const starNum = stars.length;
+	
+	for(let i=0; i<starNum; i++){
+		// 시작 후 2초 후, 3초 동안 별이 떨어지기 시작
+		stars[i].style.animation = "falling 3s 2s forwards linear";
+	}
+}
+
+function animateFishMoving(){
+	// 별이 떨이지고 난 후 물고기가 움직인다
+	const starWrapper = document.getElementsByClassName('star-wrapper')[0];
+	const stars = starWrapper.children;
+	
+	stars[0].addEventListener("animationend", () => {
+		const canvasEle = document.getElementById('fish-canvas');
+		canvas.style.visibility = 'visible';
+		// 10초 동안 오른쪽으로 물고기 움직임
+		canvasEle.style.animation = 'fishMoving 10s infinite linear, drift 2s infinite linear';
+	});
+	
+	// new Promise(resolve => {
+	// 		resolve();
+	// 	})
+	// .then(() => {});
+}
+
 // canvas를 이용해 물고기 별자리 그린다
 function drawFish(){
 	
@@ -87,8 +124,9 @@ function drawFish(){
 	let movingIdx = 0;
 	
 	// canvas 기본 값 설정
-	const canvasEle = document.getElementById('fish-canvas')
-  canvasEle.style.top = height - 2*0.6*Math.round(width / 5);
+	const canvasEle = document.getElementById('fish-canvas');
+	canvasEle.style.visibility = 'hidden';
+	canvasEle.style.top = height - 2*0.6*Math.round(width / 5);
 	const ctx = canvasEle.getContext('2d');
 	ctx.canvas.width = baseWid;
 	ctx.canvas.height = baseHei;
@@ -174,103 +212,105 @@ function drawFish(){
 	
 	// trigger of drawing fish
 	setInterval(drawFishByCanvas, 1000);
-	
-	// 물고기를 다 그린 후 움직이도록
-	canvasEle.style.animation = 'fishMoving 10s infinite linear, drift 2s infinite linear';
-	
-	let isFirst = true;  
-	const startMovingForward = () => {
-		if(isFirst){
-			isFirst = false;
-		}
-		else{
-			return;
-		}
-		// *falling star와 timing 맞추어야 한다
-		canvasEle.style.animation = 'fishMoving 10s infinite linear, drift 2s infinite linear';
-	}
-	// 물고기가 위치해 있는 물결
-	// const wave2 = document.getElementsByClassName("layer2")[0];
-	// *추후에 별이 다 떨어진 후에 trigger 하도록 변경
-	// wave2.addEventListener("animationiteration", startMovingForward, false);
-	
 }
 
-function removeStar(){
+function animateNightToDay() {
+	
+	const html = document.querySelector('html');
+	
+	new Promise(resolve => {
+		let step = 0;
+		let intervalID = null;
+		const brightNightColor = () => {
+			// 밝기가 충분히 밝아지면 다른 색상으로 전환 시작
+			if(step > 170) {
+				clearInterval(intervalID);
+				resolve();
+				return;
+			}
+			// 밝기만 밝아짐
+			html.style.background = `linear-gradient(25deg, black, rgb(0, ${0+step}, ${(255-170)+step}))`;
+			step += 5;
+		}
+		intervalID = setInterval(brightNightColor, 100);
+		
+	}).then(() => {
+		let step = 0;
+		let intervalID = null;
+		const shiftNightToDay = () => {
+			if(step > 50){
+				clearInterval(intervalID);
+				return Promise.resolve();
+			} 
+			html.style.background = `linear-gradient(25deg, black, ${50-idx}%, rgb(0, 170, 255))`;
+			step += 5;
+		}
+		intervalID = setInterval(shiftNightToDay, 100);
+	}).then(() => {
+		// *함수가 promise를 반환해서 외부에서 체이닝을 해야 하는 것 아닐까?
+		removeStarSky();
+		showCloud();
+		// 구름을 1.5초 노출하기 위해 
+		return new Promise(resolve => setTimeout(() => resolve()), 1500);
+	}).then(()=>{
+		doBeachBaseWork();
+		drawSand();
+		drawBeachStuff();
+		animateStepMoving();
+	});
+}
+function removeStarSky(){
+	// 별배경 없애기
 	const starSkyStyle = document.querySelector("#star-sky-canvas").style;
 	starSkyStyle.display = "none";
 	starSkyStyle.transition = "display 1s linear";
 }
-function nightToDay() {
-	let idx = 0;
-	let id1 = 0;
-	let id2 = 0;
-	const html = document.querySelector('html');
-	const changeColorRatio = () => {
-		if(idx > 50){
-			clearInterval(id2);
-			removeStar();
-			showCloud();
-			return;
-		} 
-		html.style.background = `linear-gradient(25deg, black, ${50-idx}%, rgb(0, 170, 255))`;
-		idx += 5;
-	}
-	const changeColor = () => {
-		if(idx > 170) {
-			idx = 5;
-			id2 = setInterval(changeColorRatio, 100);
-			clearInterval(id1);
-			return;
-		}
-		html.style.background = `linear-gradient(25deg, black, rgb(0, ${0+idx}, ${255-170+idx}))`;
-		idx += 5;
-	}
-	id1 = setInterval(changeColor, 100);
-}
-
 function showCloud(){
+	// 구름 생성
 	document.querySelector(".day").style.visibility = "visible";
-  showBeach();
 }
 
-function showBeach(){
- 
-	// remain only one wave
-	const waves = document.getElementsByClassName("wave-wrapper");
-  for(let i=0; i<6; i++){
-    waves[2].children[i].style.animation = 'waveUp 2s forwards ease-in-out';
-  }
-	 let isFirst = true;
-  waves[2].children[0].addEventListener("animationend", () => {
-    // remove cloud
-    if(!isFirst) return;
-    isFirst = false;
-	  document.querySelector(".day").style.visibility = "hidden";
-	  document.querySelector("#fish-canvas").style.display = "none";
-    document.querySelector(".star-wrapper").style.visibility = "hidden";
-    
-	  // hide another wave
-	  waves[0].style.visibility = 'hidden';
-	  waves[1].style.visibility = 'hidden';
+function doBeachBaseWork(){
 	
-	  // change background color
-	  const html = document.querySelector("html");
-    html.style.background = '';
-	  html.style.backgroundColor = '#f9eebd';
-    
-    for(let i=0; i<6; i++){
-      waves[2].children[i].style.animation = 'waveDown 2s forwards ease-in-out';
-    }
-   
-    drawBeach();
-  });
+	const waves = document.getElementsByClassName("wave-wrapper");
+	const waveNum = waves[2].children.length;
+	for(let i=0; i<waveNum; i++){
+		// 파도가 전 화면을 가림
+		waves[2].children[i].style.animation = 'waveUp 2s forwards ease-in-out';
+	}
+	
+	//let isFirst = true;
+	waves[2].children[0].addEventListener("animationend", () => {
+	
+		//if(!isFirst) return;
+		//isFirst = false;
+
+		// 물고기 숨기기
+		document.querySelector("#fish-canvas").style.display = "none";
+		// 떨어진 별 숨기기
+		document.querySelector(".star-wrapper").style.visibility = "hidden";
+		
+		// 나머지 파도 숨기기
+		waves[0].style.visibility = 'hidden';
+		waves[1].style.visibility = 'hidden';
+		
+		// 배경 모래색으로 변경
+		const html = document.querySelector("html");
+		html.style.background = '';
+		html.style.backgroundColor = '#f9eebd';
+		
+		// 파도 낮아짐
+		for(let i=0; i<6; i++){
+			waves[2].children[i].style.animation = 'waveDown 2s forwards ease-in-out';
+		}
+	});
 }
 
-function drawBeach(){
-	const ctx =         document.getElementById('beach-canvas').getContext('2d');
+function drawSand(){
+	const ctx =	document.getElementById('beach-canvas').getContext('2d');
 	ctx.canvas.width = width;
 	ctx.canvas.height = height;
+	
 	const baseColor = 'white';
 	ctx.fillStyle = baseColor;
 	ctx.beginPath();
@@ -281,28 +321,33 @@ function drawBeach(){
 		ctx.arc(coord.x, coord.y, 1, Math.PI*2, 0, true);
 	}
 	ctx.fill();
-  document.getElementsByClassName("parasol")[0].style.visibility = 'visible';
-	document.getElementsByClassName("center")[0].style.visibility = 'visible';
-  moveStep();
 }
-function moveStep(){
-	const footNum = addStepEle();
+function drawBeachStuff(){
+	document.getElementsByClassName("parasol")[0].style.visibility = 'visible';
+	document.getElementsByClassName("center")[0].style.visibility = 'visible';
+}
+function animateStepMoving(){
+	addStepEle();
 	const stepContainer = document.getElementsByClassName("steps")[0];
 	const steps = stepContainer.children;
-	const pos = 100;
-	let intervalID;
+	const wave = document.getElementsByClassName("wave-wrapper")[2];
+	const start = wave.children[0].getBoundingClientRect().top;
+	const parasol = document.getElementsByClassName("parasol")[0];
+	const end = parasol.getBoundingClientRect().bottom;
+	const stepSize = (end - start) / 5;
+	let intervalID = null;
 	let i = 0;
 	const showStep = () => {
 		const leftStyle = steps[i].getElementsByClassName("left")[0].style;
 		const rightStyle = steps[i].getElementsByClassName("right")[0].style;
 		
 		leftStyle.backgroundColor = 'rgba(0,0,0, 0.3)';
-		leftStyle.transform = `translate(-10px ,-${pos + 30*i}px)`;
+		leftStyle.transform = `translate(-10px ,-${start + stepSize*i}px)`;
 		leftStyle.transition = 'transform 1s 0.5s steps(1, end)';
 		leftStyle.animation = 'removeStep 1s linear 6.5s forwards';
 		
 		rightStyle.backgroundColor = 'rgba(0,0,0, 0.3)';
-		rightStyle.transform = `translate(10px, -${pos + 30*i}px)`;
+		rightStyle.transform = `translate(10px, -${start + stepSize*i}px)`;
 		rightStyle.transition = 'transform 1s steps(1, end)';
 		rightStyle.animation = 'removeStep 1s linear 6s forwards';
 		//console.log(i);
@@ -310,13 +355,13 @@ function moveStep(){
 			clearInterval(intervalID);
 		}
 	}
-	intervalID = setInterval(showStep, 3000);
+	intervalID = setInterval(showStep, 2000);
 }
 
 function addStepEle(){
 	// 파도와 파라솔 간의 간격 계산
-	const dist = 200;
-	const footNum = 200/20;
+	
+	const footNum = 5;
 	const stepContainer = document.getElementsByClassName("steps")[0];
 	let eleStr = "";
 	for(let i=0; i<footNum; i++){
@@ -392,7 +437,7 @@ function getRandomCoord(xUpper, yUpper){
 
 // function moveStep(){ 
 //   const rows = document.getElementsByClassName("steps")[0].children;
- 
+
 //   // 추후에 파라솔 위치 구해서 조건으로 설정
 //   const pos = 0;
 
@@ -404,14 +449,14 @@ function getRandomCoord(xUpper, yUpper){
 //          left.style.animation = 'stepping 3s linear infinite';
 //       }
 //       left.style.transition = 'transform 1s 0.5s steps(1, end)';
-    
+
 //       const [right] = rows[args.rowIdx].getElementsByClassName("right");
 //       right.style.transform = `translate(10px, -${pos+15*args.i}px)`;
 //       if(args.rowIdx == 2){
 //          right.style.animation = 'stepping 3s linear infinite';
 //       }
 //       right.style.transition = 'transform 1s steps(1, end), background-color 1s ease-out';
-    
+
 //       args.i++;
 //       if(args.i === 5){
 //       clearInterval(args.intervalId); 
@@ -436,7 +481,7 @@ function getRandomCoord(xUpper, yUpper){
 //   moveFunc.move1.intervalId = wrapIntervalFunc(generateMoveFunc(moveFunc.move1), 0);
 //   moveFunc.move2.intervalId = wrapIntervalFunc(generateMoveFunc(moveFunc.move2), 6000);
 //   moveFunc.move3.intervalId = wrapIntervalFunc(generateMoveFunc(moveFunc.move3), 12000);
-  
+
 // }
 // async function wrapIntervalFunc(func, ms){
 //   let id;
