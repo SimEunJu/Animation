@@ -6,28 +6,35 @@ const height = window.innerHeight;
 addWave();
 drawBackgroundStar();
 drawMainStar();
+drawFish();
 //document.querySelector("#fish-canvas").addEventListener("animationstart", nightToDay, false);
-
+function getWaveNum(){
+	return width/300 > 5 ? Math.round(width/300) : 5;
+}
+function getWaveWidth(){
+	return Math.round(width/getWaveNum());
+}
 function addWave(){
 	
 	const waveWrappers = document.getElementsByClassName('wave-wrapper');
 	const waveWrapperNum = waveWrappers.length;
 	
 	// *화면 크기에 따른 파도 크기 설정
-	const waveNum = 5;
-	const waveWidth = Math.round(width/waveNum);
+	const waveNum = getWaveNum();
+	const waveWidth = getWaveWidth();
+	const waveHeight = waveWidth*1.2;
 	
 	// wave의 수직 위치 정하기
 	for(let i=0; i<waveWrapperNum; i++){
-		waveWrappers[i].style.top = `calc(100vh - ${(len-i)*0.6*waveWidth}px)`;
+		waveWrappers[i].style.top = `calc(100vh - ${(waveWrapperNum-i)*0.5*waveHeight}px)`;
 	}
 	
 	const hierarchy = [{
 		type: "div",
 		child: []
 	}];
-	const style = `width: ${waveWidth}px; height: ${waveWidth*1.2}px`;
-	for(let i=0; i<waveNum; i++){
+	const style = `width: ${waveWidth}px; height: ${waveHeight}px`;
+	for(let i=0; i<waveNum+1; i++){
 		hierarchy[0].child.push({
 			type: "div",
 			attrs: {class: "wave", style: style},
@@ -39,7 +46,7 @@ function addWave(){
 	// dom tree를 만든다
 	makeEleTree(hierarchy);
 	
-	for(let i=0; i<len; i++){
+	for(let i=0; i<waveWrapperNum; i++){
 		waveWrappers[i].innerHTML = hierarchy[0].element.innerHTML;
 	}
 }
@@ -48,7 +55,7 @@ function drawBackgroundStar(){
 	
 	const ctx = document.getElementById('star-sky-canvas').getContext('2d');
 	ctx.canvas.width = width;
-	ctx.canvas.height = height;
+	ctx.canvas.height = height - getWaveWidth()*2;
 	// - 3*0.6*Math.round(width / 5);
 	
 	const baseColor = 'rgba(225, 215, 0, 0.7)';
@@ -73,7 +80,7 @@ function drawMainStar(){
 	for(let i=0; i<starNum; i++){
 		
 		// *wave와 하늘 경계선 위치 공통
-		const coord = getRandomCoord(width, height - 3*0.6*Math.round(width / 5));
+		const coord = getRandomCoord(width, height - getWaveWidth()*2);
 		
 		stars[i].setAttribute("class", "star");
 		
