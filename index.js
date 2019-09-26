@@ -7,6 +7,10 @@ addWave();
 drawBackgroundStar();
 drawMainStar();
 drawFish();
+animateStarFalling();
+animateFishMoving();
+animateNightToDay();
+
 //document.querySelector("#fish-canvas").addEventListener("animationstart", nightToDay, false);
 function getWaveNum(){
 	return width/300 > 5 ? Math.round(width/300) : 5;
@@ -106,18 +110,14 @@ function animateFishMoving(){
 	// 별이 떨이지고 난 후 물고기가 움직인다
 	const starWrapper = document.getElementsByClassName('star-wrapper')[0];
 	const stars = starWrapper.children;
-	
+	const canvas = document.getElementById('fish-canvas');
+
 	stars[0].addEventListener("animationend", () => {
 		const canvasEle = document.getElementById('fish-canvas');
 		canvas.style.visibility = 'visible';
 		// 10초 동안 오른쪽으로 물고기 움직임
 		canvasEle.style.animation = 'fishMoving 10s infinite linear, drift 2s infinite linear';
 	});
-	
-	// new Promise(resolve => {
-	// 		resolve();
-	// 	})
-	// .then(() => {});
 }
 
 // canvas를 이용해 물고기 별자리 그린다
@@ -249,21 +249,42 @@ function animateNightToDay() {
 				clearInterval(intervalID);
 				return Promise.resolve();
 			} 
-			html.style.background = `linear-gradient(25deg, black, ${50-idx}%, rgb(0, 170, 255))`;
+			html.style.background = `linear-gradient(25deg, black, ${50-step}%, rgb(0, 170, 255))`;
 			step += 5;
 		}
 		intervalID = setInterval(shiftNightToDay, 100);
 	}).then(() => {
 		// *함수가 promise를 반환해서 외부에서 체이닝을 해야 하는 것 아닐까?
-		removeStarSky();
-		showCloud();
+		
 		// 구름을 1.5초 노출하기 위해 
-		return new Promise(resolve => setTimeout(() => resolve()), 1500);
+		return new Promise(resolve => setTimeout(() => {
+			removeStarSky();
+			showCloud(true);
+			resolve();
+		}, 1500));
 	}).then(()=>{
-		doBeachBaseWork();
-		drawSand();
-		drawBeachStuff();
-		animateStepMoving();
+		return new Promise(resolve => {
+			showCloud(false);
+			resolve();
+		});
+		
+	}).then(()=>{
+		return new Promise(resolve => {
+			showCloud(false);
+			doBeachBaseWork();
+			resolve();
+		});
+	}).then(()=>{
+		return new Promise(resolve => {
+			drawBeachStuff();
+			drawSand();
+			resolve();
+		});
+	}).then(()=>{
+		return new Promise(resolve => {
+			animateStepMoving();
+			resolve();
+		});
 	});
 }
 function removeStarSky(){
@@ -272,9 +293,9 @@ function removeStarSky(){
 	starSkyStyle.display = "none";
 	starSkyStyle.transition = "display 1s linear";
 }
-function showCloud(){
+function showCloud(isVisible){
 	// 구름 생성
-	document.querySelector(".day").style.visibility = "visible";
+	document.querySelector(".day").style.visibility = isVisible ? "visible" : "hidden";
 }
 
 function doBeachBaseWork(){
